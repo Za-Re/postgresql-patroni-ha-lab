@@ -1,0 +1,28 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Lab VMs. Adjust mem/cpus here if required.
+NODES = {
+  "pg-01" => { ip: "192.168.56.11", mem: 1536, cpus: 2 },
+  "pg-02" => { ip: "192.168.56.12", mem: 1536, cpus: 2 },
+  "pg-03" => { ip: "192.168.56.13", mem: 1536, cpus: 2 },
+  "lb-01" => { ip: "192.168.56.20", mem: 512,  cpus: 1 },
+}
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-24.04"
+  config.vm.box_check_update = false
+
+  NODES.each do |name, opts|
+    config.vm.define name do |node|
+      node.vm.hostname = name
+      node.vm.network "private_network", ip: opts[:ip]
+
+      node.vm.provider "virtualbox" do |vb|
+        vb.name   = "patroni-lab-#{name}"
+        vb.memory = opts[:mem]
+        vb.cpus   = opts[:cpus]
+      end
+    end
+  end
+end
