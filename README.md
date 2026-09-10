@@ -21,12 +21,12 @@ Ports: 22 SSH · 5432 PostgreSQL · 8008 Patroni REST · 2379/2380 etcd
 ## Tooling
 
 - VirtualBox
-- Vagrant (install in Phase 1)
-- Ansible (runs from the host)
+- Vagrant
+- Ansible
 
 **Vagrant** is used for provisioning VMs and **Ansible** for configuration. Leader election is done through Patroni + etcd at runtime.
 
-## Repo layout (target)
+## Repo layout
 
 ```
 vagrant/            
