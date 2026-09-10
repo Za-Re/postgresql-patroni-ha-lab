@@ -1,0 +1,30 @@
+- name: update apt cache
+  apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: install base packages
+  apt:
+    name:
+      - chrony
+      - curl
+      - ca-certificates
+      - gnupg
+      - acl
+    state: present
+
+- name: enable time sync (etcd/patroni leases assume synced clocks)
+  service:
+    name: chrony
+    state: started
+    enabled: true
+
+- name: name resolution for cluster nodes
+  blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} patroni lab nodes"
+    block: |
+      192.168.56.11 pg-01
+      192.168.56.12 pg-02
+      192.168.56.13 pg-03
+      192.168.56.20 lb-01
