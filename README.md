@@ -27,11 +27,11 @@ Ports: 22 SSH · 5432 PostgreSQL · 8008 Patroni REST · 2379/2380 etcd
 **Vagrant** is used for provisioning VMs and **Ansible** for configuration. Leader election is done through Patroni + etcd at runtime.
 
 ## How to run
-
+Boot up VMs:
 ```bash
 cd vagrant
-vagrant up             # create + boot the 4 VMs (first run downloads the box)
-vagrant status         # all 4 should say "running"
+vagrant up             # create + boot the VMs (first run downloads the box)
+vagrant status         # all VMs should say "running"
 vagrant ssh pg-01      # log into a node
 vagrant halt           # stop the VMs
 vagrant destroy -f     # delete them
@@ -42,6 +42,21 @@ Verify the private network is up:
 ```bash
 vagrant ssh pg-01 -c "ip -4 addr show eth1; hostname"
 # expect 192.168.56.11 on eth1, hostname pg-01
+```
+
+Then configure the VMs with Ansible (run from `ansible/`):
+
+```bash
+cd ../ansible
+ansible all -m ping                      # check connectivity
+ansible-playbook playbooks/site.yml      # apply config; re-run should show changed=0
+```
+
+Verify:
+
+```bash
+ansible all -m shell -a "chronyc tracking | head -1; getent hosts pg-03"
+# expect a chrony Reference ID and pg-03 -> 192.168.56.13 on every node
 ```
 
 ## Repo layout
