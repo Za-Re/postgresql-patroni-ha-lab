@@ -1,0 +1,18 @@
+# Vagrant
+.vagrant/
+*.box
+
+# Ansible
+*.retry
+ansible/.vault_pass
+ansible/**/vault.yml
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Python (Patroni venv artifacts, if any land here)
+__pycache__/
+*.pyc
