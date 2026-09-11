@@ -66,7 +66,8 @@ vagrant/
   Vagrantfile
 ansible/
   inventory/
-  group_vars/
+    hosts.ini
+    group_vars/
   playbooks/site.yml
   roles/{common,etcd,postgres,patroni,haproxy}/
 architecture.md
