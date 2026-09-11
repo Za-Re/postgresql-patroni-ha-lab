@@ -3,3 +3,9 @@
   become: true
   roles:
     - common
+
+- name: etcd cluster
+  hosts: etcd
+  become: true
+  roles:
+    - etcd
