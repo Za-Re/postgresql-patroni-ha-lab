@@ -59,6 +59,17 @@ ansible all -m shell -a "chronyc tracking | head -1; getent hosts pg-03"
 # expect a chrony Reference ID and pg-03 -> 192.168.56.13 on every node
 ```
 
+Verify etcd:
+
+```bash
+ETCD_EP="http://192.168.56.11:2379,http://192.168.56.12:2379,http://192.168.56.13:2379"
+ansible pg-01 -m shell -a "/usr/local/bin/etcdctl --endpoints=$ETCD_EP member list -w table"
+ansible pg-01 -m shell -a "/usr/local/bin/etcdctl --endpoints=$ETCD_EP endpoint status --cluster -w table"
+ansible pg-01 -m shell -a "/usr/local/bin/etcdctl --endpoints=$ETCD_EP endpoint health --cluster"
+ansible etcd -m shell -a "systemctl is-active etcd; systemctl is-enabled etcd"
+# expect: 3 members "started", one "is leader: true", all endpoints "healthy", etcd "active"/"enabled" on pg-01..03
+```
+
 ## Repo layout
 
 ```
