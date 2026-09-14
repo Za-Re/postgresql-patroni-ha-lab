@@ -1,0 +1,34 @@
+global
+    maxconn 2048
+
+defaults
+    mode tcp
+    timeout connect 5s
+    timeout client 30s
+    timeout server 30s
+
+# Data plane: plain TCP proxy on :5432, HAProxy never parses the postgres
+# wire protocol. Which single backend receives traffic is decided entirely
+# by the health check below.
+frontend postgres_write
+    bind *:5432
+    default_backend postgres_primary
+
+# Health check hits each node's Patroni REST API on :8008, not :5432.
+# /primary returns 200 only from the current leader, 503 from replicas -
+# so exactly one server is ever "up" here, and it moves automatically
+# when Patroni promotes a new leader.
+backend postgres_primary
+    option httpchk GET /primary
+    http-check expect status 200
+{% for h in groups['postgres'] %}
+    server {{ h }} {{ hostvars[h].ansible_host }}:5432 check port 8008
+{% endfor %}
+
+# Lets us literally watch which backend is UP during failover testing.
+listen stats
+    bind *:8404
+    mode http
+    stats enable
+    stats uri /
+    stats refresh 5s

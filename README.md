@@ -16,7 +16,7 @@ today, with a planned major upgrade to 18.
 | pg-03 | 192.168.56.13  | PostgreSQL + Patroni + etcd     |
 | lb-01 | 192.168.56.20  | HAProxy (stable write endpoint) |
 
-Ports: 22 SSH · 5432 PostgreSQL · 8008 Patroni REST · 2379/2380 etcd
+Ports: 22 SSH · 5432 PostgreSQL (via HAProxy) · 8008 Patroni REST · 8404 HAProxy stats · 2379/2380 etcd
 
 ## Tooling
 
@@ -75,7 +75,15 @@ Verify postgresql + patroni:
 ansible pg-01 -b -m shell -a "/opt/patroni/bin/patronictl -c /etc/patroni/patroni.yml list"
 ansible postgres -b -m shell -a "curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8008/primary"
 # expect: one Leader + two streaming Replicas, lag 0; one node returns 200, the other two 503
-​```
+```
+
+Verify haproxy:
+
+```bash
+ansible lb-01 -b -m shell -a "systemctl is-active haproxy; ss -tlnp | grep -E ':5432|:8404'"
+timeout 3 bash -c '</dev/tcp/192.168.56.20/5432' && echo "port 5432 open on lb-01"
+# then open http://192.168.56.20:8404/ - expect one server UP, two DOWN, matching patronictl's Leader
+```
 
 ## Repo layout
 
