@@ -70,6 +70,13 @@ ansible etcd -m shell -a "systemctl is-active etcd; systemctl is-enabled etcd"
 # expect: 3 members "started", one "is leader: true", all endpoints "healthy", etcd "active"/"enabled" on pg-01..03
 ```
 
+Verify postgresql + patroni:
+```bash
+ansible pg-01 -b -m shell -a "/opt/patroni/bin/patronictl -c /etc/patroni/patroni.yml list"
+ansible postgres -b -m shell -a "curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8008/primary"
+# expect: one Leader + two streaming Replicas, lag 0; one node returns 200, the other two 503
+​```
+
 ## Repo layout
 
 ```
