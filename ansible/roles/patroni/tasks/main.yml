@@ -1,0 +1,54 @@
+- name: install venv + build prerequisites
+  apt:
+    name:
+      - python3-venv
+      - python3-dev
+      - libpq-dev
+      - gcc
+    state: present
+
+- name: install patroni (pinned version) into its own venv
+  pip:
+    name: "patroni[psycopg3,etcd3]=={{ patroni_version }}"
+    virtualenv: /opt/patroni
+    virtualenv_command: python3 -m venv
+
+- name: create patroni data directory
+  file:
+    path: /var/lib/postgresql/patroni
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0700"
+
+- name: create patroni config directory
+  file:
+    path: /etc/patroni
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0700"
+
+# 0600: this file holds the replication and superuser passwords.
+- name: install patroni config
+  template:
+    src: patroni.yml.j2
+    dest: /etc/patroni/patroni.yml
+    owner: postgres
+    group: postgres
+    mode: "0600"
+  notify: restart patroni
+
+- name: install patroni systemd unit
+  template:
+    src: patroni.service.j2
+    dest: /etc/systemd/system/patroni.service
+    mode: "0644"
+  notify: restart patroni
+
+- name: enable and start patroni
+  systemd:
+    name: patroni
+    daemon_reload: true
+    state: started
+    enabled: true

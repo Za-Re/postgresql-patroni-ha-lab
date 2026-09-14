@@ -20,11 +20,20 @@
     group: etcd
     mode: "0700"
 
+# /tmp gets wiped on every reboot, so the download/extract below can't rely on
+# it surviving across runs — check the real install target instead and skip
+# all three steps once etcd is actually in place.
+- name: check whether etcd is already installed
+  stat:
+    path: /usr/local/bin/etcd
+  register: etcd_installed
+
 - name: download etcd release
   get_url:
     url: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-amd64.tar.gz"
     dest: "/tmp/etcd-{{ etcd_version }}-linux-amd64.tar.gz"
     mode: "0644"
+  when: not etcd_installed.stat.exists
 
 - name: extract etcd release
   unarchive:
@@ -32,6 +41,7 @@
     dest: /tmp
     remote_src: true
     creates: "/tmp/etcd-{{ etcd_version }}-linux-amd64/etcd"
+  when: not etcd_installed.stat.exists
 
 - name: install etcd and etcdctl binaries
   copy:
@@ -42,6 +52,7 @@
   loop:
     - etcd
     - etcdctl
+  when: not etcd_installed.stat.exists
 
 - name: install etcd systemd unit
   template:

@@ -1,0 +1,4 @@
+# Copy to vault.yml (gitignored) and fill in real values.
+# Generate with: openssl rand -base64 18 | tr -d '=+/'
+patroni_replication_password: "changeme"
+patroni_superuser_password: "changeme"
