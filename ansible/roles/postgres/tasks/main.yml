@@ -1,0 +1,29 @@
+# Ubuntu 24.04's own repo only has PostgreSQL 16 (checked: apt-cache madison
+# postgresql). We want 17, so add the official PGDG apt repo.
+
+- name: add pgdg signing key
+  get_url:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    dest: /etc/apt/keyrings/postgresql.asc
+    mode: "0644"
+
+- name: add pgdg apt repo
+  copy:
+    dest: /etc/apt/sources.list.d/pgdg.list
+    content: "deb [signed-by=/etc/apt/keyrings/postgresql.asc] https://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main\n"
+    mode: "0644"
+
+- name: install postgresql {{ postgresql_version }}
+  apt:
+    name: "postgresql-{{ postgresql_version }}"
+    state: present
+    update_cache: true
+
+# The package's postinst auto-creates and starts a "main" cluster on :5432.
+# Patroni will own and initialize its own data dir (single-owner principle:
+# nothing but Patroni should start/stop the postgres instance it manages), so
+# drop that default cluster right away — the binaries stay installed.
+- name: drop the package-managed default cluster
+  command: "pg_dropcluster {{ postgresql_version }} main --stop"
+  args:
+    removes: "/etc/postgresql/{{ postgresql_version }}/main"
