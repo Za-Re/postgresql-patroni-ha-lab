@@ -9,3 +9,10 @@
   become: true
   roles:
     - etcd
+
+- name: postgresql + patroni
+  hosts: postgres
+  become: true
+  roles:
+    - postgres
+    - patroni
